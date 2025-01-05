@@ -68,7 +68,7 @@ void decAES(const string& inputFile, const string& outputFile, const unsigned ch
         out.write((char*)outBuffer, outLen);
         cout << "Completed with success. Output saved to " << outputFile << endl;
     } else {
-        cout << "Error: Failure. Check the KEY and IV." << endl;
+        cout << "Error: Failure. Check the key and IV." << endl;
     }
 
     EVP_CIPHER_CTX_free(ctx);
