@@ -63,32 +63,105 @@ void encAES(const string& inputFile, const string& outputFile, const unsigned ch
     	cout << "Completed with success. Output saved to " << outputFile << endl;
 }
 
+// Function to perfrom AES dec on a file
+void decAES(const string& inputFile, const string& outputFile, const unsigned char* key, const unsigned char* iv) {
+    // Open input and output files
+    ifstream in(inputFile, ios::binary);
+    ofstream out(outputFile, ios::binary);
+
+    if (!in || !out) {
+        cout << "Error: Unable to open files." << endl;
+        return;
+    }
+
+    // Initialize the context
+    EVP_CIPHER_CTX* ctx = EVP_CIPHER_CTX_new();
+    EVP_DecryptInit_ex(ctx, EVP_aes_256_cbc(), NULL, key, iv);
+
+    unsigned char inBuffer[1024], outBuffer[1032];
+    int inLen, outLen;
+
+    while (in.read((char*)inBuffer, sizeof(inBuffer))) {
+        inLen = in.gcount();
+        EVP_DecryptUpdate(ctx, outBuffer, &outLen, inBuffer, inLen);
+        out.write((char*)outBuffer, outLen);
+    }
+
+    inLen = in.gcount();
+    EVP_DecryptUpdate(ctx, outBuffer, &outLen, inBuffer, inLen);
+    out.write((char*)outBuffer, outLen);
+
+    // Write the last block
+    if (EVP_DecryptFinal_ex(ctx, outBuffer, &outLen)) {
+        out.write((char*)outBuffer, outLen);
+        cout << "Completed with success. Output saved to " << outputFile << endl;
+    } else {
+        cout << "Error: Failure. Check the KEY  and IV." << endl;
+    }
+
+    // Free the context
+    EVP_CIPHER_CTX_free(ctx);
+}
+
 // Main AES operation function
 void performAES() {
-	string inputFile, outputFile;
-    	cout << "Enter the input file name: ";
-    	cin >> inputFile;
-    	cout << "Enter the output file name: ";
-    	cin >> outputFile;
+    string inputFile, outputFile, keyHex, ivHex;
+    unsigned char key[32], iv[16];
+    int operation;
 
-	// Generate random KEY and IV
-    	unsigned char key[32], iv[16];
-    	if (!RAND_bytes(key, sizeof(key)) || !RAND_bytes(iv, sizeof(iv))) {
-        	cout << "Error generating IV." << endl;
-        	return;
-   	 }
+    cout << "\nAES Operations:" << endl;
+    cout << "1. Encypt a file" << endl;
+    cout << "2. Decrypt a file" << endl;
+    cout << "Enter choice (1-2): ";
+    cin >> operation;
 
-	// Call the enc function
-    	encAES(inputFile, outputFile, key, iv);
-	
-	// Show the KEY and IV (used for dec. purposes)
-   	cout << "KEY (IMPORTANT: Save this): ";
-   	for (int i = 0; i < sizeof(key); i++) printf("%02x", key[i]);
-   	cout << endl;
+    if (operation == 1) {
+        // Encryption workflow
+        cout << "Enter the input file name: ";
+        cin >> inputFile;
+        cout << "Enter the output file name: ";
+        cin >> outputFile;
 
-    	cout << "IV (Initialization Vector): ";
-    	for (int i = 0; i < sizeof(iv); i++) printf("%02x", iv[i]);
-    	cout << endl;
+        if (!RAND_bytes(key, sizeof(key)) || !RAND_bytes(iv, sizeof(iv))) {
+            cout << "Error generating random KEY/IV." << endl;
+            return;
+        }
+
+        encAES(inputFile, outputFile, key, iv);
+
+        cout << "KEY (IMPORTANT: Save this): ";
+        for (int i = 0; i < sizeof(key); i++) printf("%02x", key[i]);
+        cout << endl;
+
+        cout << "IV (Initialization Vector): ";
+        for (int i = 0; i < sizeof(iv); i++) printf("%02x", iv[i]);
+        cout << endl;
+
+    } else if (operation == 2) {
+        // Decryption workflow
+        cout << "Enter the encrypted file name: ";
+        cin >> inputFile;
+        cout << "Enter the output file name: ";
+        cin >> outputFile;
+
+        cout << "Enter the KEY (hex): ";
+        cin >> keyHex;
+        cout << "Enter the IV (hex): ";
+        cin >> ivHex;
+
+        // Convert hex strings to binary key and IV
+        for (size_t i = 0; i < sizeof(key); i++) {
+            sscanf(keyHex.c_str() + 2 * i, "%2hhx", &key[i]);
+        }
+        for (size_t i = 0; i < sizeof(iv); i++) {
+            sscanf(ivHex.c_str() + 2 * i, "%2hhx", &iv[i]);
+        }
+
+        decAES(inputFile, outputFile, key, iv);
+
+    } else {
+        cout << "Invalid choice. Returning to the main menu." << endl;
+    }
 }
 
 // Function to show user menu
