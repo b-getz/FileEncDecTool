@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include "aes.h"
+#include "rsa.h"
 #include <openssl/rand.h>
 
 using namespace std;
@@ -61,6 +62,47 @@ void performAES() {
     }
 }
 
+void performRSA() {
+    int operation;
+    string inputFile, outputFile, publicKeyFile, privateKeyFile;
+
+    cout << "\nRSA Operations:" << endl;
+    cout << "1. Generate RSA keys" << endl;
+    cout << "2. Encrypt a file" << endl;
+    cout << "3. Decrypt a file" << endl;
+    cout << "Enter your choice (1-3): ";
+    cin >> operation;
+
+    if (operation == 1) {
+        cout << "Enter public key file name: ";
+        cin >> publicKeyFile;
+        cout << "Enter private key file name: ";
+        cin >> privateKeyFile;
+        generateRSAKeys(publicKeyFile, privateKeyFile);
+
+    } else if (operation == 2) {
+        cout << "Enter the input file name: ";
+        cin >> inputFile;
+        cout << "Enter the output file name: ";
+        cin >> outputFile;
+        cout << "Enter public key file name: ";
+        cin >> publicKeyFile;
+        rsaEncrypt(inputFile, outputFile, publicKeyFile);
+
+    } else if (operation == 3) {
+        cout << "Enter the input file name: ";
+        cin >> inputFile;
+        cout << "Enter the output file name: ";
+        cin >> outputFile;
+        cout << "Enter private key file name: ";
+        cin >> privateKeyFile;
+        rsaDecrypt(inputFile, outputFile, privateKeyFile);
+
+    } else {
+        cout << "Invalid choice. Returning to main menu." << endl;
+    }
+}
+
 void showMenu() {
     cout << "File Enc & Dec Tool" << endl;
     cout << "___________________" << endl;
@@ -84,6 +126,7 @@ int main() {
                 break;
             case 2:
                 cout << "\nYou have selected RSA." << endl;
+		performRSA();
                 break;
             case 3:
                 cout << "\nExiting the program..." << endl;
